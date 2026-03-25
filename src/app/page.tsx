@@ -1,66 +1,65 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client';
+
+import { useState, useEffect } from 'react';
+import styles from './page.module.css';
+import UploadZone from '@/components/upload/UploadZone';
+import Workspace from '@/components/editor/Workspace';
+import { ImageFile } from '@/types';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export default function Home() {
+  const [images, setImages] = useState<ImageFile[]>([]);
+  const [isEditorVisible, setIsEditorVisible] = useState(false);
+
+  const handleImagesSelected = (newImages: ImageFile[]) => {
+    setImages((prev) => [...prev, ...newImages]);
+    setIsEditorVisible(true);
+  };
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className={styles.container}>
+      <AnimatePresence mode="wait">
+        {!isEditorVisible ? (
+          <motion.div
+            key="upload"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.5 }}
+            className={styles.hero}
           >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+            <div className={styles.heroText}>
+              <h1 className={styles.title}>
+                Transform your images <br />
+                <span className={styles.gradient}>instantly.</span>
+              </h1>
+              <p className={styles.subtitle}>
+                The professional-grade image resizer, converter, and watermarker 
+                that runs entirely in your browser.
+              </p>
+            </div>
+            
+            <UploadZone onImagesSelected={handleImagesSelected} />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="editor"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.5 }}
+            className={styles.workspace}
+          >
+            <Workspace 
+              images={images} 
+              onBack={() => setIsEditorVisible(false)}
+              onRemoveImage={(id: string) => setImages(images.filter(img => img.id !== id))}
             />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+          </motion.div>
+
+        )}
+      </AnimatePresence>
     </div>
   );
 }
+
