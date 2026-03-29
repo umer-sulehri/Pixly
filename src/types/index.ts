@@ -40,6 +40,20 @@ export interface ProcessingSettings {
     opacity: number;
     position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center';
     size: number; // percentage
+    // Optional absolute position for draggable watermark (0-1 normalized)
+    x?: number;
+    y?: number;
+  };
+  filters?: {
+    brightness?: number; // 0 to 2, 1 = normal
+    contrast?: number; // 0 to 2
+    saturation?: number; // 0 to 2
+    blur?: number; // px
+  };
+  crop?: {
+    enabled: boolean;
+    aspect?: number | null; // null = free, or ratio like 1, 16/9
+    circle?: boolean;
   };
   transform: {
     rotate: number; // 0, 90, 180, 270

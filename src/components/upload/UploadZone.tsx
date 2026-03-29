@@ -86,6 +86,17 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onImagesSelected }) => {
             <span>WebP</span>
           </div>
         </label>
+        <input
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className={styles.fileInput}
+          onChange={(e) => handleFiles(e.target.files)}
+          id="file-camera"
+        />
+        <div className={styles.cameraRow}>
+          <label htmlFor="file-camera" className={styles.cameraBtn}>Take Photo</label>
+        </div>
       </motion.div>
       
       <div className={styles.features}>

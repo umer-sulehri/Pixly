@@ -26,6 +26,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ settings, onChange, onReset
       ...settings,
       [section]: {
         ...settings[section],
+        // @ts-ignore
         [key]: value,
       },
     });
@@ -93,6 +94,15 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ settings, onChange, onReset
                 />
                 Maintain Aspect Ratio
               </label>
+              <div className={styles.presetsRow}>
+                <label>Presets</label>
+                <div className={styles.presetButtons}>
+                  <button onClick={() => { updateSetting('resize','width',1080); updateSetting('resize','height',1080); updateSetting('resize','preset','social-ig'); }}>Instagram (1080x1080)</button>
+                  <button onClick={() => { updateSetting('resize','width',1920); updateSetting('resize','height',1080); updateSetting('resize','preset','hd'); }}>YouTube (1920x1080)</button>
+                  <button onClick={() => { updateSetting('resize','width',1200); updateSetting('resize','height',627); updateSetting('resize','preset','social-fb'); }}>LinkedIn (1200x627)</button>
+                  <button onClick={() => { updateSetting('resize','width',400); updateSetting('resize','height',400); updateSetting('resize','preset','whatsapp-dp'); }}>WhatsApp DP (400x400)</button>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -153,6 +163,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ settings, onChange, onReset
                   <option value="image/jpeg">JPEG</option>
                   <option value="image/png">PNG</option>
                   <option value="image/webp">WebP</option>
+                      <option value="image/svg+xml">SVG (limited)</option>
                 </select>
               </div>
             </div>
@@ -180,6 +191,17 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ settings, onChange, onReset
                 />
               </div>
               <div className={styles.inputGroup}>
+                <label>Image (Logo)</label>
+                <input type="file" accept="image/*" onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  if (f) {
+                    const reader = new FileReader();
+                    reader.onload = () => updateSetting('watermark','image', reader.result as string);
+                    reader.readAsDataURL(f);
+                  }
+                }} />
+              </div>
+              <div className={styles.inputGroup}>
                 <label>Opacity ({Math.round(settings.watermark.opacity * 100)}%)</label>
                 <input 
                   type="range" 
@@ -205,6 +227,59 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ settings, onChange, onReset
               </div>
             </div>
           )}
+        </div>
+
+        {/* Filters Section */}
+        <div className={`${styles.section}`}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.sectionTitle}>
+              <Type size={18} />
+              <span>Filters</span>
+            </div>
+          </div>
+          <div className={styles.sectionContent}>
+            <div className={styles.inputGroup}>
+              <label>Brightness ({(settings.filters?.brightness ?? 1).toFixed(2)})</label>
+              <input type="range" min="0" max="2" step="0.01" value={settings.filters?.brightness ?? 1} onChange={(e) => updateSetting('filters','brightness', parseFloat(e.target.value))} />
+            </div>
+            <div className={styles.inputGroup}>
+              <label>Contrast ({(settings.filters?.contrast ?? 1).toFixed(2)})</label>
+              <input type="range" min="0" max="2" step="0.01" value={settings.filters?.contrast ?? 1} onChange={(e) => updateSetting('filters','contrast', parseFloat(e.target.value))} />
+            </div>
+            <div className={styles.inputGroup}>
+              <label>Saturation ({(settings.filters?.saturation ?? 1).toFixed(2)})</label>
+              <input type="range" min="0" max="2" step="0.01" value={settings.filters?.saturation ?? 1} onChange={(e) => updateSetting('filters','saturation', parseFloat(e.target.value))} />
+            </div>
+            <div className={styles.inputGroup}>
+              <label>Background Blur ({settings.filters?.blur ?? 0}px)</label>
+              <input type="range" min="0" max="20" step="1" value={settings.filters?.blur ?? 0} onChange={(e) => updateSetting('filters','blur', parseFloat(e.target.value))} />
+            </div>
+          </div>
+        </div>
+
+        {/* Crop Section */}
+        <div className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.sectionTitle}>
+              <Type size={18} />
+              <span>Crop</span>
+            </div>
+          </div>
+          <div className={styles.sectionContent}>
+            <label className={styles.checkboxLabel}>
+              <input type="checkbox" checked={settings.crop?.enabled ?? false} onChange={(e) => updateSetting('crop','enabled', e.target.checked)} />
+              Enable Crop
+            </label>
+            <div className={styles.inputGroup}>
+              <label>Aspect Presets</label>
+              <div className={styles.presetButtons}>
+                <button onClick={() => updateSetting('crop','aspect', 1)}>1:1</button>
+                <button onClick={() => updateSetting('crop','aspect', 16/9)}>16:9</button>
+                <button onClick={() => updateSetting('crop','aspect', null)}>Free</button>
+                <button onClick={() => updateSetting('crop','circle', true)}>Circle</button>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Transform Section */}

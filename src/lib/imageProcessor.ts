@@ -46,16 +46,26 @@ export async function processImage(
   const scaleY = settings.transform.flipVertical ? -1 : 1;
   ctx.scale(scaleX, scaleY);
 
+  // Apply filters if any
+  if (settings.filters) {
+    const { brightness = 1, contrast = 1, saturation = 1, blur = 0 } = settings.filters;
+    // CSS-like filter string supported by canvas
+    ctx.filter = `brightness(${brightness}) contrast(${contrast}) saturate(${saturation}) blur(${blur}px)`;
+  }
+
   // Draw the image onto the canvas
   // Note: drawImage coordinates are relative to the current transformation matrix
   ctx.drawImage(img, -targetWidth / 2, -targetHeight / 2, targetWidth, targetHeight);
+
+  // Clear filter for subsequent drawing operations
+  ctx.filter = 'none';
 
   // Reset transformation for watermarking
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 
   // 2. Apply Watermark
   if (settings.watermark.enabled) {
-    applyWatermark(ctx, canvas.width, canvas.height, settings.watermark);
+    await applyWatermark(ctx, canvas.width, canvas.height, settings.watermark);
   }
 
   // 3. Convert Format and Get Blob
@@ -105,7 +115,8 @@ function applyWatermark(
   height: number,
   settings: ProcessingSettings['watermark']
 ) {
-  if (settings.type === 'text' && settings.text) {
+  return new Promise<void>(async (resolve) => {
+    if (settings.type === 'text' && settings.text) {
     const fontSize = (width * settings.size) / 100;
     ctx.font = `${fontSize}px Inter, sans-serif`;
     ctx.fillStyle = `rgba(255, 255, 255, ${settings.opacity})`;
@@ -123,9 +134,48 @@ function applyWatermark(
       case 'bottom-right': x = width - margin; y = height - margin; ctx.textAlign = 'right'; break;
     }
 
-    ctx.fillText(settings.text, x, y);
+      // If absolute x/y provided (0..1), use them
+      if (typeof settings.x === 'number' && typeof settings.y === 'number') {
+        x = settings.x * width;
+        y = settings.y * height;
+      }
+
+      ctx.fillText(settings.text, x, y);
+      resolve();
   }
-  // Image watermark implementation can be added here
+    else if (settings.type === 'image' && settings.image) {
+      try {
+        const wm = await loadImage(settings.image);
+        // scale watermark to a fraction of canvas width based on settings.size
+        const wmWidth = (width * settings.size) / 100;
+        const scale = wmWidth / wm.width;
+        const wmHeight = wm.height * scale;
+
+        let x = width - wmWidth - 16;
+        let y = height - wmHeight - 16;
+        switch (settings.position) {
+          case 'top-left': x = 16; y = 16; break;
+          case 'top-right': x = width - wmWidth - 16; y = 16; break;
+          case 'bottom-left': x = 16; y = height - wmHeight - 16; break;
+          case 'bottom-right': x = width - wmWidth - 16; y = height - wmHeight - 16; break;
+          case 'center': x = (width - wmWidth) / 2; y = (height - wmHeight) / 2; break;
+        }
+        if (typeof settings.x === 'number' && typeof settings.y === 'number') {
+          x = settings.x * width - wmWidth / 2;
+          y = settings.y * height - wmHeight / 2;
+        }
+
+        ctx.globalAlpha = settings.opacity;
+        ctx.drawImage(wm, x, y, wmWidth, wmHeight);
+        ctx.globalAlpha = 1;
+      } catch (e) {
+        console.warn('Failed to load watermark image', e);
+      }
+      resolve();
+    } else {
+      resolve();
+    }
+  });
 }
 
 export async function downloadImage(blob: Blob, filename: string) {

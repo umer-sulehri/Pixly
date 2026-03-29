@@ -90,6 +90,33 @@
   gap: 0.5rem;
 }
 
+.presetsRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.presetButtons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.presetButtons button {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--glass-border);
+  padding: 0.35rem 0.6rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--foreground);
+  font-size: 0.8rem;
+}
+
+.presetButtons button:hover {
+  border-color: var(--primary);
+  background: rgba(59,130,246,0.06);
+}
+
 .inputGroup label {
   font-size: 0.75rem;
   font-weight: 600;
